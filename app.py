@@ -1,27 +1,18 @@
+import streamlit as st
 from dotenv import load_dotenv
 
-from src.database import Database
+load_dotenv()
 
-from src.repository import MaterialRepository
-from src.service import QueryService
-from src.dto import MaterialDto
-from src.models import Material
+home = st.Page("view/home.py", title="Main")
+product = st.Page("view/product.py", title="생산 제품")
+material = st.Page("view/material.py", title="원재료")
+production = st.Page("view/production.py", title="제품 생산 관리")
+production_form = st.Page("view/production_form.py", title="생산 등록")
 
+pages = st.navigation(
+    {
+        "MES": [home, product, material, production, production_form],
+    }
+)
 
-def main():
-    load_dotenv()
-
-    try:
-        with Database() as db:
-            # material_repository = MaterialRepository(db)
-            query_service = QueryService(db)
-
-            production = query_service.find_all_production()
-            print(production)
-
-    except RuntimeError as e:
-        print(e)
-
-
-if __name__ == "__main__":
-    main()
+pages.run()

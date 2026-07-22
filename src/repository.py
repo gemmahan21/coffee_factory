@@ -7,7 +7,7 @@ from src.dto import (
     ProductLotDto,
     ProductionMaterialDto,
 )
-from src.models import Material
+from src.enum import ProductionStatus
 
 
 class ProductRepository:
@@ -30,7 +30,7 @@ class ProductRepository:
 
     def find_all(self):
         query = "select * from product;"
-        self.db.fetch_all(query)
+        return self.db.fetch_all(query)
 
 
 class ProductionRepository:
@@ -51,6 +51,10 @@ class ProductionRepository:
         )
 
         self.db.execute(query, params)
+
+    def update_production_status(self, production_id: int, status: ProductionStatus):
+        query = "update production set status = %s where production_id = %s;"
+        self.db.execute(query, (status, production_id))
 
     def add_proudct_lot(self, lot: ProductLotDto):
         query = """
@@ -73,6 +77,12 @@ class ProductionRepository:
         )
         self.db.execute(query, params)
 
+    def find_product_lot_no(self, lot_no: str):
+        query = "select count(*) from product_lot where lot_no = %s::text;"
+
+        count = self.db.get_row_count(query, (lot_no,))
+        return count
+
 
 class MaterialRepository:
     def __init__(self, db: Database):
@@ -91,4 +101,4 @@ class MaterialRepository:
 
     def find_all(self):
         query = "select * from material;"
-        self.db.fetch_all(query)
+        return self.db.fetch_all(query)

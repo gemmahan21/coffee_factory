@@ -54,7 +54,7 @@ class Database:
             cursor.close()
 
             return result
-        except psycopg.DataError as e:
+        except psycopg.Error as e:
             print(f"{e}")
             return []
 
@@ -74,9 +74,27 @@ class Database:
 
             return dict(row)
 
-        except psycopg.DataError as e:
+        except psycopg.Error as e:
             print(f"{e}")
             return None
+
+    def get_row_count(self, query, params=()):
+        conn = self.connect()
+
+        try:
+            cursor = conn.cursor()
+
+            cursor.execute(query, params)
+            row = cursor.fetchone()
+
+            if row is None:
+                return 0
+
+            return row.get("count")
+
+        except psycopg.Error as e:
+            print(f"{e}")
+            return 0
 
     def __enter__(self):
         self.connect()
