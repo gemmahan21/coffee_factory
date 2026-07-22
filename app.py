@@ -1,5 +1,11 @@
 from dotenv import load_dotenv
-from src.repository import Database, MaterialRepository
+
+from src.database import Database
+
+from src.repository import MaterialRepository
+from src.service import QueryService
+from src.dto import MaterialDto
+from src.models import Material
 
 
 def main():
@@ -7,9 +13,11 @@ def main():
 
     try:
         with Database() as db:
-            material_repository = MaterialRepository(db)
-            list = material_repository.find_all()
-            print(list)
+            # material_repository = MaterialRepository(db)
+            query_service = QueryService(db)
+
+            production = query_service.find_all_production()
+            print(production)
 
     except RuntimeError as e:
         print(e)

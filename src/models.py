@@ -1,43 +1,47 @@
 from dataclasses import dataclass
 
+from .enum import ProductType, ProductionStatus, MaterialCategory
+
 
 @dataclass
 class Product:
-    product_id: int
+    product_id: int | None
     product_code: str
     product_name: str
-    product_type: str
+    product_type: ProductType
     is_active: str
 
 
 @dataclass
 class Production:
-    production_id: int
+    production_id: int | None
     production_code: str
     product_id: int
     quantity: int
-    unit: str
-    status: str
-
-
-@dataclass
-class Product_lot:
-    product_lot_id: int
-    lot_no: str
-    production_id: int
     produced_at: str
+    unit: str
+    status: ProductionStatus
 
 
 @dataclass
 class Material:
-    material_id: int
+    material_id: int | None
     material_code: str
     material_name: str
-    category: str
+    category: MaterialCategory
 
 
 @dataclass
-class Production_material:
-    production_material_id: int
+class ProductLot:
+    product_lot_id: int | None
+    lot_no: str
+    production_id: int
+
+
+@dataclass
+class ProductionMaterial:
+    production_material_id: int | None
     production_id: int
     material_id: int
+    quantity: int
+    unit: str
