@@ -33,6 +33,26 @@ class ProductRepository:
         return self.db.fetch_all(query)
 
 
+class MaterialRepository:
+    def __init__(self, db: Database):
+        self.db = db
+
+    def add_material(self, material: MaterialDto):
+        query = """
+            insert into material (material_code, material_name, category)
+            values (%s, %s, %s);
+        """
+
+        # print(material.__dict__)
+        params = (material.material_code, material.material_name, material.category)
+
+        self.db.execute(query, params)
+
+    def find_all(self):
+        query = "select * from material;"
+        return self.db.fetch_all(query)
+
+
 class ProductionRepository:
     def __init__(self, db: Database):
         self.db = db
@@ -77,28 +97,53 @@ class ProductionRepository:
         )
         self.db.execute(query, params)
 
-    def find_product_lot_no(self, lot_no: str):
+    def get_row_count_by_product_lot_no(self, lot_no: str):
         query = "select count(*) from product_lot where lot_no = %s::text;"
 
         count = self.db.get_row_count(query, (lot_no,))
         return count
 
-
-class MaterialRepository:
-    def __init__(self, db: Database):
-        self.db = db
-
-    def add_material(self, material: MaterialDto):
+    def find_all_production(self):
         query = """
-            insert into material (material_code, material_name, category)
-            values (%s, %s, %s);
-        """
-
-        # print(material.__dict__)
-        params = (material.material_code, material.material_name, material.category)
-
-        self.db.execute(query, params)
-
-    def find_all(self):
-        query = "select * from material;"
+                select 
+                    pn.production_id, pl.lot_no, pn.produced_at, 
+                    p.product_name, p.product_type,
+                    pn.production_code, pn.quantity, pn.unit, pn.status
+                from production pn
+                join product p
+                on p.product_id = pn.product_id
+                left join product_lot pl
+                on pl.production_id  = pn.production_id
+                order by pn.produced_at desc;
+            """
         return self.db.fetch_all(query)
+
+    def find_product_by_product_lot(self, lot_no: str):
+        query = """
+            select
+                pl.lot_no, p.product_id, p.product_code,
+                p.product_name, p.product_type,
+                pn.production_id, pn.production_code,
+                pn.quantity, pn.unit, pn.produced_at
+            from product_lot pl
+            join production pn
+            on pl.production_id = pn.production_id
+            join product p
+            on pn.product_id = p.product_id
+            where pl.lot_no = %s::text;
+        """
+        return self.db.fetch_one(query, (lot_no,))
+
+    def find_input_material_by_production(self, production_id: int):
+        query = """
+            select
+                pm.material_id, m.material_name, m.category,
+                pm.production_id, pn.quantity, pn.produced_at
+            from production_material pm
+            join material m
+            on pm.material_id = m.material_id
+            join production pn
+            on pm.production_id = pn.production_id
+            where pn.production_id = %s;
+        """
+        return self.db.fetch_all(query, (production_id,))

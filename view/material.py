@@ -1,23 +1,17 @@
 import streamlit as st
 
-from src.database import Database
-from src.repository import MaterialRepository
-from src.dto import MaterialDto
+from src.utils import connect_db
 from src.enum import MaterialCategory
+from src.repository import MaterialRepository
+
+db = connect_db()
 
 st.subheader("원재료 목록")
 
-try:
-    with Database() as db:
-        material_repository = MaterialRepository(db)
-        material = material_repository.find_all()
+material_repository = MaterialRepository(db)
+material = material_repository.find_all()
 
-        st.dataframe(material)
-
-
-except RuntimeError as e:
-    print(e)
-    st.error("조회 가능한 제품이 없습니다.")
+st.dataframe(material)
 
 st.divider()
 

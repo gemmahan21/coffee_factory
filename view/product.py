@@ -1,32 +1,26 @@
 import streamlit as st
 
-from src.database import Database
-from src.repository import ProductRepository
-from src.dto import ProductDto
+from src.utils import connect_db
 from src.enum import ProductType
+from src.repository import ProductRepository
+
+db = connect_db()
 
 st.subheader("전체 제품 목록")
 
-try:
-    with Database() as db:
-        product_repository = ProductRepository(db)
-        products = product_repository.find_all()
+product_repository = ProductRepository(db)
+products = product_repository.find_all()
 
-        st.dataframe(
-            products,
-            column_config={
-                "product_id": "ID",
-                "product_code": "Code",
-                "product_name": "Name",
-                "product_type": "Type",
-                "is_active": "Status",
-            },
-        )
-
-
-except RuntimeError as e:
-    print(e)
-    st.error("조회 가능한 제품이 없습니다.")
+st.dataframe(
+    products,
+    column_config={
+        "product_id": "ID",
+        "product_code": "Code",
+        "product_name": "Name",
+        "product_type": "Type",
+        "is_active": "Status",
+    },
+)
 
 st.divider()
 
