@@ -2,17 +2,16 @@ import streamlit as st
 
 from src.utils import connect_db
 from src.repository import ProductionRepository
-from src.service import ProductionService
+from src.enum import ProductionStatus
 
 db = connect_db()
 production_repository = ProductionRepository(db)
-production_service = ProductionService(production_repository)
 
 st.header("제품 생산 관리")
 
 st.subheader("생산 목록")
 
-production = production_service.find_all_production()
+production = production_repository.find_all_production()
 st.dataframe(production)
 
 tab1, tab2 = st.tabs(["생산 조회", "생산 관리"])
@@ -26,7 +25,7 @@ with tab1:
         submitted = st.form_submit_button("검색")
 
         if submitted:
-            products = production_service.find_product_by_product_lot(lot_no)
+            products = production_repository.find_product_by_product_lot(lot_no)
             st.dataframe(products)
 
     st.divider()
@@ -39,12 +38,27 @@ with tab1:
         submitted = st.form_submit_button("검색")
 
         if submitted:
-            input_material = production_service.find_input_material_by_production(
+            input_material = production_repository.find_input_material_by_production(
                 production_id
             )
             st.dataframe(input_material)
 
 with tab2:
+    st.subheader("생산 상태 변경")
+    with st.form(key="production_status", clear_on_submit=True):
+        production_id = st.text_input("생산 ID")
+        status = st.selectbox("Status", ProductionStatus)
+
+        submitted = st.form_submit_button("Update Status")
+        if submitted:
+            response = production_repository.update_production_status(
+                production_id, status
+            )
+            if response:
+                st.toast(
+                    f"{response.get("production_id")} - {response.get("status")} 생산 상태 변경 완료 "
+                )
+
     st.subheader("투입 원재료 등록")
     with st.form(key="production_material", clear_on_submit=True):
         production_id = st.text_input("생산 ID")  # status: progress

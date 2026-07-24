@@ -30,9 +30,15 @@ class Database:
             cursor = conn.cursor()
 
             cursor.execute(query, params)
+            row = cursor.fetchone()
 
             conn.commit()
             cursor.close()
+
+            if row is None:
+                return None
+
+            return dict(row)
 
         except psycopg.OperationalError as e:
             conn.rollback()
@@ -95,6 +101,21 @@ class Database:
         except psycopg.Error as e:
             print(f"{e}")
             return 0
+
+    def execute_delete(self, query, params=()):
+        conn = self.connect()
+
+        try:
+            cursor = conn.cursor()
+
+            cursor.execute(query, params)
+
+            conn.commit()
+            cursor.close()
+
+        except psycopg.OperationalError as e:
+            conn.rollback()
+            print(f"Execute Error : {e}")
 
     def __enter__(self):
         self.connect()

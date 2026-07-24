@@ -3,15 +3,38 @@ import streamlit as st
 from src.utils import connect_db
 from src.enum import MaterialCategory
 from src.repository import MaterialRepository
+from src.dto import MaterialDto
+
+# def on_click_edit():
+#     click = st.session_state.edit
+
+#     row_index = click["row"]
+#     selected_id = materials[row_index].get("material_id")
+
+#     if selected_id:
+#         material_repository.remove_material(selected_id)
+
 
 db = connect_db()
 
 st.subheader("원재료 목록")
 
 material_repository = MaterialRepository(db)
-material = material_repository.find_all()
+materials = material_repository.find_all()
 
-st.dataframe(material)
+# for material in materials:
+#     material["edit"] = "delete"
+
+st.dataframe(
+    materials,
+    # column_config={
+    #     "edit": st.column_config.ButtonColumn(
+    #         type="secondary",
+    #         on_click=on_click_edit,
+    #         key="edit",
+    #     )
+    # },
+)
 
 st.divider()
 
@@ -23,4 +46,10 @@ with st.form(key="material", clear_on_submit=True):
     submitted = st.form_submit_button("재료 추가")
 
     if submitted:
-        st.toast("원재료가 추가되었습니다.")
+        new_material = MaterialDto(
+            material_code=code, material_name=name, category=category
+        )
+        response = material_repository.add_material(new_material)
+
+        if response:
+            st.rerun()

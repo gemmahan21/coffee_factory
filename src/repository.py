@@ -17,7 +17,8 @@ class ProductRepository:
     def add_product(self, product: ProductDto):
         query = """
             insert into product (product_code, product_name, product_type, is_active)
-            values (%s, %s, %s, %s);
+            values (%s, %s, %s, %s)
+            returning product_id;
         """
         params = (
             product.product_code,
@@ -26,7 +27,7 @@ class ProductRepository:
             product.is_active,
         )
 
-        self.db.execute(query, params)
+        return self.db.execute(query, params)
 
     def find_all(self):
         query = "select * from product;"
@@ -40,17 +41,22 @@ class MaterialRepository:
     def add_material(self, material: MaterialDto):
         query = """
             insert into material (material_code, material_name, category)
-            values (%s, %s, %s);
+            values (%s, %s, %s)
+            returning material_id;
         """
 
         # print(material.__dict__)
         params = (material.material_code, material.material_name, material.category)
 
-        self.db.execute(query, params)
+        return self.db.execute(query, params)
 
     def find_all(self):
         query = "select * from material;"
         return self.db.fetch_all(query)
+
+    def remove_material(self, material_id: int):
+        query = "delete from material where material_id = %s;"
+        self.db.execute_delete(query, (material_id,))
 
 
 class ProductionRepository:
@@ -60,7 +66,7 @@ class ProductionRepository:
     def add_production(self, production: ProductionDto):
         query = """
             insert into production (product_code, product_id, quantity, unit, status)
-            values (%s, %s, %s, %s, %s);
+            values (%s, %s, %s, %s, %s) returning production_id;
         """
         params = (
             production.production_code,
@@ -73,16 +79,21 @@ class ProductionRepository:
         self.db.execute(query, params)
 
     def update_production_status(self, production_id: int, status: ProductionStatus):
-        query = "update production set status = %s where production_id = %s;"
-        self.db.execute(query, (status, production_id))
+        query = "update production set status = %s::text where production_id = %s returning production_id, status;"
+        return self.db.execute(query, (status, production_id))
+
+    def get_production_status(self, production_id: int):
+        query = "select status from production where production_id = %s;"
+        return self.db.fetch_one(query, (production_id))
 
     def add_proudct_lot(self, lot: ProductLotDto):
         query = """
             insert into product_lot (lot_no, product_id)
-            values (%s, %s);
+            values (%s, %s)
+            returnig product_lot_id, lot_no;
         """
         params = (lot.lot_no, lot.production_id)
-        self.db.execute(query, params)
+        return self.db.execute(query, params)
 
     def add_production_material(self, productionMaterial: ProductionMaterialDto):
         query = """
@@ -119,20 +130,23 @@ class ProductionRepository:
         return self.db.fetch_all(query)
 
     def find_product_by_product_lot(self, lot_no: str):
-        query = """
-            select
-                pl.lot_no, p.product_id, p.product_code,
-                p.product_name, p.product_type,
-                pn.production_id, pn.production_code,
-                pn.quantity, pn.unit, pn.produced_at
-            from product_lot pl
-            join production pn
-            on pl.production_id = pn.production_id
-            join product p
-            on pn.product_id = p.product_id
-            where pl.lot_no = %s::text;
-        """
-        return self.db.fetch_one(query, (lot_no,))
+        count = self.get_row_count_by_product_lot_no(lot_no)
+
+        if count > 0:
+            query = """
+                select
+                    pl.lot_no, p.product_id, p.product_code,
+                    p.product_name, p.product_type,
+                    pn.production_id, pn.production_code,
+                    pn.quantity, pn.unit, pn.produced_at
+                from product_lot pl
+                join production pn
+                on pl.production_id = pn.production_id
+                join product p
+                on pn.product_id = p.product_id
+                where pl.lot_no = %s::text;
+            """
+            return self.db.fetch_one(query, (lot_no,))
 
     def find_input_material_by_production(self, production_id: int):
         query = """
