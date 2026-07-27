@@ -3,6 +3,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+st.set_page_config(layout="centered")
+
 home = st.Page("view/home.py", title="Main")
 product = st.Page("view/product.py", title="생산 제품")
 material = st.Page("view/material.py", title="원재료")

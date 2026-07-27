@@ -29,6 +29,11 @@ class ProductRepository:
 
         return self.db.execute(query, params)
 
+    def update_product_status(self, is_active: bool, product_id: int):
+        query = "update product set is_active = %s where product_id = %s returning product_id, is_active;"
+
+        return self.db.execute(query, (is_active, product_id))
+
     def find_all(self):
         query = "select * from product;"
         return self.db.fetch_all(query)
@@ -55,6 +60,9 @@ class MaterialRepository:
         return self.db.fetch_all(query)
 
     def remove_material(self, material_id: int):
+        query = "delete from production_material where material_id = %s;"
+        self.db.execute_delete(query, (material_id,))
+
         query = "delete from material where material_id = %s;"
         self.db.execute_delete(query, (material_id,))
 
@@ -65,8 +73,8 @@ class ProductionRepository:
 
     def add_production(self, production: ProductionDto):
         query = """
-            insert into production (product_code, product_id, quantity, unit, status)
-            values (%s, %s, %s, %s, %s) returning production_id;
+            insert into production (production_code, product_id, quantity, unit, status)
+            values (%s, %s, %s, %s, %s) returning production_id, production_code;
         """
         params = (
             production.production_code,
@@ -76,7 +84,7 @@ class ProductionRepository:
             production.status,
         )
 
-        self.db.execute(query, params)
+        return self.db.execute(query, params)
 
     def update_production_status(self, production_id: int, status: ProductionStatus):
         query = "update production set status = %s::text where production_id = %s returning production_id, status;"
@@ -84,13 +92,13 @@ class ProductionRepository:
 
     def get_production_status(self, production_id: int):
         query = "select status from production where production_id = %s;"
-        return self.db.fetch_one(query, (production_id))
+        return self.db.fetch_one(query, (production_id,))
 
     def add_proudct_lot(self, lot: ProductLotDto):
         query = """
-            insert into product_lot (lot_no, product_id)
-            values (%s, %s)
-            returnig product_lot_id, lot_no;
+            insert into product_lot (lot_no, production_id)
+            values (%s, %s) 
+            returning product_lot_id, lot_no;
         """
         params = (lot.lot_no, lot.production_id)
         return self.db.execute(query, params)
@@ -98,7 +106,7 @@ class ProductionRepository:
     def add_production_material(self, productionMaterial: ProductionMaterialDto):
         query = """
             insert into production_material (production_id, material_id, quantity, unit)
-            values (%s, %s);
+            values (%s, %s, %s, %s) returning production_material_id;
         """
         params = (
             productionMaterial.production_id,
@@ -106,7 +114,7 @@ class ProductionRepository:
             productionMaterial.quantity,
             productionMaterial.unit,
         )
-        self.db.execute(query, params)
+        return self.db.execute(query, params)
 
     def get_row_count_by_product_lot_no(self, lot_no: str):
         query = "select count(*) from product_lot where lot_no = %s::text;"

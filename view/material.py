@@ -5,14 +5,15 @@ from src.enum import MaterialCategory
 from src.repository import MaterialRepository
 from src.dto import MaterialDto
 
-# def on_click_edit():
-#     click = st.session_state.edit
 
-#     row_index = click["row"]
-#     selected_id = materials[row_index].get("material_id")
+def on_click_edit():
+    click = st.session_state.material_edit
 
-#     if selected_id:
-#         material_repository.remove_material(selected_id)
+    row_index = click["row"]
+    selected_id = materials[row_index].get("material_id")
+
+    if selected_id:
+        material_repository.remove_material(selected_id)
 
 
 db = connect_db()
@@ -22,19 +23,18 @@ st.subheader("원재료 목록")
 material_repository = MaterialRepository(db)
 materials = material_repository.find_all()
 
-# for material in materials:
-#     material["edit"] = "delete"
+for material in materials:
+    material["edit"] = ":material/delete:"
 
 st.dataframe(
     materials,
-    # column_config={
-    #     "edit": st.column_config.ButtonColumn(
-    #         type="secondary",
-    #         on_click=on_click_edit,
-    #         key="edit",
-    #     )
-    # },
+    column_config={
+        "edit": st.column_config.ButtonColumn(
+            type="secondary", on_click=on_click_edit, key="material_edit", label=""
+        )
+    },
 )
+
 
 st.divider()
 
