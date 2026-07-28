@@ -1,7 +1,7 @@
 import streamlit as st
 
 from src.enum import ProductionStatus
-from src.utils import validate_number, connect_db
+from src.utils import validate_number, connect_db, generate_code
 from src.dto import ProductionDto
 from src.repository import ProductionRepository
 
@@ -9,10 +9,11 @@ db = connect_db()
 
 st.subheader("생산 등록")
 with st.form(key="production", clear_on_submit=True):
-    code = st.text_input("생산 Code")
+    code = st.text_input("생산 Code", value=f"{generate_code("production")}")
     product_id = st.text_input("제품 ID")
     quantity = st.text_input("수량")
     unit = st.text_input("단위", value="EA")
+    produced_at = st.date_input("생산일")
     status = st.selectbox("생산 상태", ProductionStatus)
 
     submitted = st.form_submit_button("추가")
@@ -32,6 +33,7 @@ with st.form(key="production", clear_on_submit=True):
             quantity=quantity,
             unit=unit,
             status=status,
+            produced_at=produced_at,
         )
 
         production_repository = ProductionRepository(db)

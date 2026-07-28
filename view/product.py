@@ -47,17 +47,18 @@ st.data_editor(
     disabled=["product_id", "product_code", "product_name", "product_type"],
 )
 
-if "products" in st.session_state:
-    edited = st.session_state.products.get("edited_rows")
+if st.button("제품 상태 업데이트"):
+    if "products" in st.session_state:
+        edited = st.session_state.products.get("edited_rows")
 
-    if len(edited) > 0:
-        for key, value in edited.items():
-            # print(products[key].get("product_id"), value.get("is_active"))
-            response = product_repository.update_product_status(
-                value.get("is_active"), products[key].get("product_id")
-            )
+        if len(edited) > 0:
+            for key, value in edited.items():
+                # print(products[key].get("product_id"), value.get("is_active"))
+                response = product_repository.update_product_status(
+                    value.get("is_active"), products[key].get("product_id")
+                )
 
-    st.session_state.pop("products")
+        st.session_state.pop("products")
 
 st.divider()
 

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 
 from .enum import ProductType, ProductionStatus, MaterialCategory
 
@@ -25,6 +26,7 @@ class ProductionDto:
     quantity: int
     unit: str
     status: ProductionStatus
+    produced_at: date = date.today()
 
 
 @dataclass

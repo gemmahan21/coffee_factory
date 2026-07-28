@@ -35,7 +35,7 @@ class ProductRepository:
         return self.db.execute(query, (is_active, product_id))
 
     def find_all(self):
-        query = "select * from product;"
+        query = "select * from product order by product_id;"
         return self.db.fetch_all(query)
 
 
@@ -56,7 +56,7 @@ class MaterialRepository:
         return self.db.execute(query, params)
 
     def find_all(self):
-        query = "select * from material;"
+        query = "select * from material order by material_id;"
         return self.db.fetch_all(query)
 
     def remove_material(self, material_id: int):
@@ -136,6 +136,14 @@ class ProductionRepository:
                 order by pn.produced_at desc;
             """
         return self.db.fetch_all(query)
+
+    def get_quantity_by_date(self, start: str, end: str):
+        query = """
+            select produced_at, quantity from production 
+            where produced_at between %s and %s
+            order by produced_at;
+        """
+        return self.db.fetch_all(query, (start, end))
 
     def find_product_by_product_lot(self, lot_no: str):
         count = self.get_row_count_by_product_lot_no(lot_no)

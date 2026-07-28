@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import date
 
 from .enum import ProductType, ProductionStatus, MaterialCategory
 
@@ -18,7 +19,7 @@ class Production:
     production_code: str
     product_id: int
     quantity: int
-    produced_at: str
+    produced_at: date
     unit: str
     status: ProductionStatus
 
