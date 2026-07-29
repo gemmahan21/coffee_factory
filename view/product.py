@@ -1,19 +1,22 @@
 import streamlit as st
 
-from src.utils import connect_db
+from src.utils import connect_db, generate_product_code
 from src.enum import ProductType
 from src.dto import ProductDto
 from src.repository import ProductRepository
 
+# def handle_status():
+#     click = st.session_state.material_edit
 
-def handle_status():
-    click = st.session_state.material_edit
+#     row_index = click["row"]
+#     selected_id = products[row_index].get("product_id")
 
-    row_index = click["row"]
-    selected_id = products[row_index].get("product_id")
 
-    if selected_id:
-        print(selected_id)
+#     if selected_id:
+#         print(selected_id)
+def update_product_code_input():
+    product_type = st.session_state.product_type
+    st.session_state.product_code = generate_product_code(product_type)
 
 
 db = connect_db()
@@ -22,17 +25,6 @@ st.subheader("전체 제품 목록")
 
 product_repository = ProductRepository(db)
 products = product_repository.find_all()
-
-# st.dataframe(
-#     products,
-#     column_config={
-#         "product_id": "ID",
-#         "product_code": "Code",
-#         "product_name": "Name",
-#         "product_type": "Type",
-#         "is_active": "Status",
-#     },
-# )
 
 st.data_editor(
     products,
@@ -57,24 +49,37 @@ if st.button("제품 상태 업데이트"):
                 response = product_repository.update_product_status(
                     value.get("is_active"), products[key].get("product_id")
                 )
+        else:
+            st.toast("변경 내역이 없습니다.")
 
         st.session_state.pop("products")
+    st.toast("상태가 변경되었습니다.")
 
 st.divider()
 
-with st.form(key="product", clear_on_submit=True):
-    name = st.text_input("제품명")
-    code = st.text_input("제품 코드")
-    type = st.selectbox("제품 유형", ProductType)
+with st.container(border=True):
+    type = st.selectbox(
+        "제품 유형",
+        ProductType,
+        key="product_type",
+        on_change=update_product_code_input,
+    )
 
-    submitted = st.form_submit_button("제품 추가")
+    if "product_code" not in st.session_state:
+        st.session_state.product_code = f"{generate_product_code(type)}"
 
-    if submitted:
-        st.toast("제품이 추가되었습니다.")
-        product = ProductDto(
-            product_code=code, product_name=name, product_type=type, is_active=False
-        )
-        response = product_repository.add_product(product)
+    with st.form(key="product", border=False, clear_on_submit=True):
+        name = st.text_input("제품명")
+        code = st.text_input("제품 코드", key="product_code")
 
-        if response:
-            st.rerun()
+        submitted = st.form_submit_button("제품 추가")
+
+        if submitted:
+            st.toast("제품이 추가되었습니다.")
+            product = ProductDto(
+                product_code=code, product_name=name, product_type=type, is_active=False
+            )
+            response = product_repository.add_product(product)
+
+            if response:
+                st.rerun()

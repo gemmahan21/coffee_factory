@@ -19,6 +19,21 @@ def normal_width_container():
     return col
 
 
+def add_input_material():
+    st.session_state.input_material_count += 1
+
+
+def remove_input_material():
+    if st.session_state.input_material_count > 1:
+        last_index = st.session_state.input_material_count - 1
+
+        st.session_state.pop(f"input_material_id_{last_index}", None)
+        st.session_state.pop(f"input_material_quantity_{last_index}", None)
+        st.session_state.pop(f"input_material_unit_{last_index}", None)
+
+        st.session_state.input_material_count -= 1
+
+
 st.set_page_config(layout="wide")
 
 db = connect_db()
@@ -106,32 +121,61 @@ with normal_width_container():
                 st.rerun()
 
     st.markdown("##### 투입 원재료 등록")
-    with st.form(key="production_material", clear_on_submit=True):
+    with st.container(border=True):
         production_id = st.text_input("생산 ID")  # status: progress
-        material_id = st.text_input("원재료 ID")
-        quantity = st.text_input("수량")
-        unit = st.selectbox("단위", ["ea", "box"])
 
-        submitted = st.form_submit_button("등록")
+        if "input_material_count" not in st.session_state:
+            st.session_state.input_material_count = 1
 
-        if submitted:
-            quantity = validate_number(quantity)
-            if quantity < 1:
-                st.error("제품 ID 숫자를 입력하세요.")
-            else:
-                production_material = ProductionMaterialDto(
-                    production_id=production_id,
-                    material_id=material_id,
-                    quantity=quantity,
-                    unit=unit,
+        btn1, btn2 = st.columns(2)
+        with btn1:
+            st.button(
+                "+ 항목 추가", on_click=add_input_material, use_container_width=True
+            )
+        with btn2:
+            st.button(
+                "- 항목 삭제", on_click=remove_input_material, use_container_width=True
+            )
+
+        with st.form(key="production_material", border=False, clear_on_submit=True):
+            for i in range(st.session_state.input_material_count):
+                material_id = st.text_input("원재료 ID", key=f"input_material_id_{i}")
+                quantity = st.text_input("수량", key=f"input_material_quantity_{i}")
+                unit = st.selectbox(
+                    "단위", ["EA", "Box"], key=f"input_material_unit_{i}"
                 )
-                response = input_production_material(
-                    production_repository, production_material
-                )
-                if response:
-                    print(response)
-                else:
-                    st.toast("생산 상태가 진행 중인지 확인하세요.")
+                st.divider()
+
+            submitted = st.form_submit_button("등록")
+
+            if submitted:
+                for i in range(st.session_state.input_material_count):
+                    material_id = st.session_state.get(f"input_material_id_{i}")
+                    quantity = st.session_state.get(f"input_material_quantity_{i}")
+                    unit = st.session_state.get(f"input_material_unit_{i}")
+
+                    quantity = validate_number(quantity)
+                    if quantity < 1:
+                        st.error("수량에는 숫자만 입력하세요.")
+                        break
+                    else:
+                        production_material = ProductionMaterialDto(
+                            production_id=production_id,
+                            material_id=material_id,
+                            quantity=quantity,
+                            unit=unit,
+                        )
+                        response = input_production_material(
+                            production_repository, production_material
+                        )
+                        if response:
+                            print(response)
+                            st.toast("원재료가 등록되었습니다.")
+                        else:
+                            st.toast("생산 상태가 진행 중인지 확인하세요.")
+                            break
+
+                st.session_state.input_material_count = 1
 
     st.markdown("##### 생산 Lot 등록")
     with st.form(key="product_lot", clear_on_submit=True):
@@ -145,5 +189,6 @@ with normal_width_container():
             response = create_product_lot(production_repository, product_lot)
             if response:
                 print(response)
+                st.toast("생산 Lot이 등록되었습니다.")
             else:
                 st.toast("생산 상태가 완료되었는지 확인하세요.")

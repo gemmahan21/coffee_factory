@@ -12,7 +12,7 @@ with st.form(key="production", clear_on_submit=True):
     code = st.text_input("생산 Code", value=f"{generate_code("production")}")
     product_id = st.text_input("제품 ID")
     quantity = st.text_input("수량")
-    unit = st.text_input("단위", value="EA")
+    unit = st.selectbox("단위", ["EA", "Box"])
     produced_at = st.date_input("생산일")
     status = st.selectbox("생산 상태", ProductionStatus)
 

@@ -3,7 +3,7 @@ import calendar
 
 from .database import Database
 from .repository import ProductionRepository
-from .enum import ProductionStatus
+from .enum import ProductionStatus, MaterialCategory, ProductType
 from .dto import ProductionMaterialDto, ProductLotDto
 
 
@@ -68,7 +68,31 @@ def get_today_str():
 def generate_code(type: str):
     if type == "production":
         return f"PROD-{get_today_str()}-001"
-    if type == "product_lot":
+    elif type == "product_lot":
         return f"LOT-FG-{get_today_str()}-001"
     else:
         return get_today_str()
+
+
+def genarate_material_code(category: MaterialCategory):
+    code = "MAT-"
+    if category == MaterialCategory.GREEN_BEAN:
+        code = code + MaterialCategory.GREEN_BEAN.split("_")[1]
+    elif category == MaterialCategory.MILK_POWDER:
+        code = code + MaterialCategory.MILK_POWDER.split("_")[0]
+    elif category == MaterialCategory.OTHER:
+        pass
+    else:
+        code = code + category
+    return code
+
+
+def generate_product_code(type: ProductType):
+    code = "PRD-"
+    if type == ProductType.COFFEE_MIX:
+        code += ProductType.COFFEE_MIX.split("_")[1]
+    elif type == ProductType.DRIP_COFFEE:
+        code += ProductType.DRIP_COFFEE.split("_")[0]
+    else:
+        code += type
+    return code

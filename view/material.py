@@ -1,19 +1,45 @@
 import streamlit as st
 
-from src.utils import connect_db
+from src.utils import connect_db, genarate_material_code
 from src.enum import MaterialCategory
 from src.repository import MaterialRepository
 from src.dto import MaterialDto
 
 
-def on_click_edit():
+@st.dialog("등록된 원재료 지우기")
+def confirm_delete(selected: int):
+    st.write("정말 삭제하시겠습니까?")
+
+    col1, col2 = st.columns(2)
+    with col1:
+        if st.button("Yes"):
+            st.session_state.confirm = True
+            material_repository.remove_material(selected)
+    with col2:
+        if st.button("No"):
+            st.session_state.confirm = False
+
+    del st.session_state["confirm"]
+    st.rerun()
+
+
+def on_edit():
     click = st.session_state.material_edit
 
     row_index = click["row"]
     selected_id = materials[row_index].get("material_id")
 
     if selected_id:
-        material_repository.remove_material(selected_id)
+        # material_repository.remove_material(selected_id)
+        if "confirm" not in st.session_state:
+            st.session_state.confirm = False
+
+        confirm_delete(selected=selected_id)
+
+
+def update_material_code_input():
+    material_category = st.session_state.material_category
+    st.session_state.material_code = genarate_material_code(material_category)
 
 
 db = connect_db()
@@ -30,7 +56,10 @@ st.dataframe(
     materials,
     column_config={
         "edit": st.column_config.ButtonColumn(
-            type="secondary", on_click=on_click_edit, key="material_edit", label=""
+            type="secondary",
+            on_click=on_edit,
+            key="material_edit",
+            label="",
         )
     },
 )
@@ -38,18 +67,28 @@ st.dataframe(
 
 st.divider()
 
-with st.form(key="material", clear_on_submit=True):
-    name = st.text_input("원재료명")
-    code = st.text_input("원재료 코드")
-    category = st.selectbox("카테고리", MaterialCategory)
+with st.container(border=True):
+    category = st.selectbox(
+        "카테고리",
+        MaterialCategory,
+        key="material_category",
+        on_change=update_material_code_input,
+    )
 
-    submitted = st.form_submit_button("재료 추가")
+    if "material_code" not in st.session_state:
+        st.session_state.material_code = f"{genarate_material_code(category)}"
 
-    if submitted:
-        new_material = MaterialDto(
-            material_code=code, material_name=name, category=category
-        )
-        response = material_repository.add_material(new_material)
+    with st.form(key="material", border=False, clear_on_submit=True):
+        name = st.text_input("원재료명")
+        code = st.text_input("원재료 코드", key="material_code")
 
-        if response:
-            st.rerun()
+        submitted = st.form_submit_button("재료 추가")
+
+        if submitted:
+            new_material = MaterialDto(
+                material_code=code, material_name=name, category=category
+            )
+            response = material_repository.add_material(new_material)
+
+            if response:
+                st.rerun()
