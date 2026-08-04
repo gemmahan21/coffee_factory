@@ -14,6 +14,7 @@ pip-delete-this-directory.txt
 
 # Virtual environments
 .env
+.env.*
 .venv
 venv/
 ENV/
@@ -66,3 +67,6 @@ $RECYCLE.BIN/
 data/*.csv
 
 *.txt
+
+.streamlit
+.streamlit/*

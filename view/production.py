@@ -13,10 +13,7 @@ from src.repository import ProductionRepository
 from src.enum import ProductionStatus
 from src.dto import ProductionMaterialDto, ProductLotDto
 
-
-def normal_width_container():
-    _, col, _ = st.columns([1, 3, 1])
-    return col
+st.set_page_config(layout="wide")
 
 
 def add_input_material():
@@ -34,8 +31,6 @@ def remove_input_material():
         st.session_state.input_material_count -= 1
 
 
-st.set_page_config(layout="wide")
-
 db = connect_db()
 production_repository = ProductionRepository(db)
 
@@ -46,8 +41,9 @@ st.markdown("#### 생산 목록")
 production = production_repository.find_all_production()
 st.dataframe(production, width="stretch")
 
+column1, column2 = st.columns(2, gap="large")
 
-with normal_width_container():
+with column1:
     tab1, tab2 = st.tabs(["생산 차트", "생산 조회"])
 
     with tab1:
@@ -56,9 +52,9 @@ with normal_width_container():
         st.markdown("##### 최근 생산량")
         col1, col2 = st.columns(2)
         with col1:
-            start = st.date_input("start", value=current_date.get("start"))
+            start = st.date_input("Start", value=current_date.get("start"))
         with col2:
-            end = st.date_input("end")
+            end = st.date_input("End", max_value="today")
 
         production_quantity = production_repository.get_quantity_by_date(
             start=start, end=end
@@ -81,8 +77,11 @@ with normal_width_container():
             submitted = st.form_submit_button("검색")
 
             if submitted:
-                products = production_repository.find_product_by_product_lot(lot_no)
-                st.dataframe(products)
+                product = production_repository.find_product_by_product_lot(lot_no)
+                if product is None:
+                    st.write("생산 내역이 없습니다.")
+                else:
+                    st.dataframe(product)
 
         st.divider()
 
@@ -99,10 +98,12 @@ with normal_width_container():
                         production_id
                     )
                 )
-                st.dataframe(input_material)
+                if len(input_material) < 1:
+                    st.write("생산 내역이 없습니다.")
+                else:
+                    st.dataframe(input_material)
 
-    st.divider()
-
+with column2:
     st.markdown("#### 생산 관리\n")
     st.markdown("##### 생산 상태 변경")
     with st.form(key="production_status", clear_on_submit=True):
@@ -115,9 +116,6 @@ with normal_width_container():
                 production_id, status
             )
             if response:
-                # st.toast(
-                #     f"{response.get("production_id")} - {response.get("status")} 생산 상태 변경 완료 "
-                # )
                 st.rerun()
 
     st.markdown("##### 투입 원재료 등록")
@@ -139,17 +137,21 @@ with normal_width_container():
 
         with st.form(key="production_material", border=False, clear_on_submit=True):
             for i in range(st.session_state.input_material_count):
+                st.divider()
                 material_id = st.text_input("원재료 ID", key=f"input_material_id_{i}")
                 quantity = st.text_input("수량", key=f"input_material_quantity_{i}")
                 unit = st.selectbox(
                     "단위", ["EA", "Box"], key=f"input_material_unit_{i}"
                 )
-                st.divider()
 
             submitted = st.form_submit_button("등록")
 
             if submitted:
-                for i in range(st.session_state.input_material_count):
+                count = 1
+                if st.session_state.input_material_count > 0:
+                    count = st.session_state.input_material_count
+
+                for i in range(count):
                     material_id = st.session_state.get(f"input_material_id_{i}")
                     quantity = st.session_state.get(f"input_material_quantity_{i}")
                     unit = st.session_state.get(f"input_material_unit_{i}")
@@ -169,7 +171,7 @@ with normal_width_container():
                             production_repository, production_material
                         )
                         if response:
-                            print(response)
+                            # print(response)
                             st.toast("원재료가 등록되었습니다.")
                         else:
                             st.toast("생산 상태가 진행 중인지 확인하세요.")
@@ -188,7 +190,7 @@ with normal_width_container():
             product_lot = ProductLotDto(lot_no=lot_no, production_id=production_id)
             response = create_product_lot(production_repository, product_lot)
             if response:
-                print(response)
+                # print(response)
                 st.toast("생산 Lot이 등록되었습니다.")
             else:
                 st.toast("생산 상태가 완료되었는지 확인하세요.")

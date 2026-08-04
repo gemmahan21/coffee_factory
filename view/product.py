@@ -49,11 +49,12 @@ if st.button("제품 상태 업데이트"):
                 response = product_repository.update_product_status(
                     value.get("is_active"), products[key].get("product_id")
                 )
+
+            st.toast("상태가 변경되었습니다.")
         else:
             st.toast("변경 내역이 없습니다.")
 
         st.session_state.pop("products")
-    st.toast("상태가 변경되었습니다.")
 
 st.divider()
 

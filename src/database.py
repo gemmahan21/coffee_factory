@@ -1,6 +1,7 @@
 import psycopg
 from psycopg.rows import dict_row
 import os
+from ..app import DB_URL
 
 
 class Database:
@@ -11,11 +12,13 @@ class Database:
         try:
             if self.conn is None:
                 self.conn = psycopg.connect(
-                    host=os.getenv("DB_HOST"),
-                    port=os.getenv("DB_PORT"),
-                    dbname=os.getenv("DB_NAME"),
-                    user=os.getenv("DB_USER"),
-                    password=os.getenv("DB_PASSWORD"),
+                    # host=os.getenv("DB_HOST"),
+                    # port=os.getenv("DB_PORT"),
+                    # dbname=os.getenv("DB_NAME"),
+                    # user=os.getenv("DB_USER"),
+                    # password=os.getenv("DB_PASSWORD"),
+                    # os.getenv("DB_URL"),
+                    DB_URL,
                     row_factory=dict_row,
                 )
             return self.conn

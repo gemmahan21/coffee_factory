@@ -1,7 +1,10 @@
 import streamlit as st
 from dotenv import load_dotenv
+import os
 
 load_dotenv()
+
+DB_URL = os.getenv("DB_URL") or st.secrets["DB_URL"]
 
 st.set_page_config(layout="centered")
 

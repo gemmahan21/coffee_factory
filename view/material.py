@@ -55,12 +55,16 @@ for material in materials:
 st.dataframe(
     materials,
     column_config={
+        "material_id": "ID",
+        "material_code": "Code",
+        "material_name": "Name",
+        "category": "Category",
         "edit": st.column_config.ButtonColumn(
             type="secondary",
             on_click=on_edit,
             key="material_edit",
             label="",
-        )
+        ),
     },
 )
 
