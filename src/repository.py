@@ -73,8 +73,8 @@ class ProductionRepository:
 
     def add_production(self, production: ProductionDto):
         query = """
-            insert into production (production_code, product_id, quantity, unit, status)
-            values (%s, %s, %s, %s, %s) returning production_id, production_code;
+            insert into production (production_code, product_id, quantity, unit, status, produced_at)
+            values (%s, %s, %s, %s, %s, %s) returning production_id, production_code;
         """
         params = (
             production.production_code,
@@ -82,12 +82,13 @@ class ProductionRepository:
             production.quantity,
             production.unit,
             production.status,
+            production.produced_at,
         )
 
         return self.db.execute(query, params)
 
     def update_production_status(self, production_id: int, status: ProductionStatus):
-        query = "update production set status = %s::text where production_id = %s returning production_id, status;"
+        query = "update production set status = %s where production_id = %s returning production_id, status;"
         return self.db.execute(query, (status, production_id))
 
     def get_production_status(self, production_id: int):
