@@ -1,7 +1,9 @@
 import psycopg
 from psycopg.rows import dict_row
-import os
-from ..app import DB_URL
+
+import streamlit as st
+
+DB_URL = st.secrets["DB_URL"]
 
 
 class Database:
