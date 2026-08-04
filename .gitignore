@@ -67,6 +67,7 @@ $RECYCLE.BIN/
 data/*.csv
 
 *.txt
+!requirements.txt
 
 .streamlit
 .streamlit/*
