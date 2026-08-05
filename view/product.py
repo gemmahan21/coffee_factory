@@ -3,17 +3,29 @@ import streamlit as st
 from src.utils import connect_db, generate_product_code
 from src.enum import ProductType
 from src.dto import ProductDto
-from src.repository import ProductRepository
+from src.repository import ProductRepository, ProductionRepository
 
-# def handle_status():
-#     click = st.session_state.material_edit
+st.markdown(
+    """
+    <style>
+    [data-testid="stMetric"] {
+        min-width: 132px;
+    }
+    [data-testid="stMetricLabel"] {
+        font-size: 8px;
+        border-bottom: 1px solid #ddd;
+    }
+    [data-testid="stMetricValue"] {
+        font-size: 16px;
+        font-weight: bold;
+        margin: 8px 0 3px 0;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
-#     row_index = click["row"]
-#     selected_id = products[row_index].get("product_id")
 
-
-#     if selected_id:
-#         print(selected_id)
 def update_product_code_input():
     product_type = st.session_state.product_type
     st.session_state.product_code = generate_product_code(product_type)
@@ -25,6 +37,40 @@ st.subheader("전체 제품 목록")
 
 product_repository = ProductRepository(db)
 products = product_repository.find_all()
+
+production_repository = ProductionRepository(db)
+quantity = production_repository.production_quantity_by_product()
+
+st.markdown("##### 제품별 총 생산량\n")
+
+if len(quantity) < 6:
+    cols = st.columns(len(quantity))
+
+    for col, temp in zip(cols, quantity):
+        with col:
+            st.metric(
+                label="".join((temp.get("product_name").replace("커피", "")).split()),
+                value=temp.get("sum"),
+                delta="총 생산량",
+                delta_arrow="off",
+                border=True,
+                format="localized",
+            )
+else:
+    st.dataframe(
+        quantity,
+        column_config={
+            "product_id": None,
+            "product_name": "Name",
+            "sum": "Total Quantity",
+        },
+    )
+
+
+st.divider()
+
+active_count = product_repository.get_count_by_is_active(True)
+st.info(f"현재 생산 중인 제품 개수 : {active_count}")
 
 st.data_editor(
     products,

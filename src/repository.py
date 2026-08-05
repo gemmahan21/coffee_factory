@@ -38,6 +38,12 @@ class ProductRepository:
         query = "select * from product order by product_id;"
         return self.db.fetch_all(query)
 
+    def get_count_by_is_active(self, is_active: bool):
+        query = "select count(*) from product where is_active = %s;"
+
+        count = self.db.get_row_count(query, (is_active,))
+        return count
+
 
 class MaterialRepository:
     def __init__(self, db: Database):
@@ -136,6 +142,17 @@ class ProductionRepository:
                 on pl.production_id  = pn.production_id
                 order by pn.produced_at desc;
             """
+        return self.db.fetch_all(query)
+
+    def production_quantity_by_product(self):
+        query = """
+            select p.product_id, p.product_name, sum(pn.quantity)
+            from production pn
+            join product p
+            on pn.product_id = p.product_id
+            group by p.product_id
+            order by sum(pn.quantity) desc;
+        """
         return self.db.fetch_all(query)
 
     def get_quantity_by_date(self, start: str, end: str):

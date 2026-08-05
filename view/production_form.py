@@ -41,6 +41,3 @@ with st.form(key="production", clear_on_submit=True):
             response = production_repository.add_production(production)
             if response:
                 st.success(f"{response.get("production_code")} 등록 완료")
-
-
-# 생산 등록 (> 생산 상태 변경: 진행 중) > 투입 원재료 등록 > 완제품 lot 등록 (> 생산 상태 변경: 완료)

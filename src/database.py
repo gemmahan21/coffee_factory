@@ -1,9 +1,6 @@
 import psycopg
 from psycopg.rows import dict_row
-from .config import get_database_url
-
-DB_URL = get_database_url()
-print(DB_URL)
+import os
 
 
 class Database:
@@ -14,13 +11,7 @@ class Database:
         try:
             if self.conn is None:
                 self.conn = psycopg.connect(
-                    # host=os.getenv("DB_HOST"),
-                    # port=os.getenv("DB_PORT"),
-                    # dbname=os.getenv("DB_NAME"),
-                    # user=os.getenv("DB_USER"),
-                    # password=os.getenv("DB_PASSWORD"),
-                    # os.getenv("DB_URL"),
-                    DB_URL,
+                    os.getenv("DB_URL"),
                     row_factory=dict_row,
                 )
             return self.conn
